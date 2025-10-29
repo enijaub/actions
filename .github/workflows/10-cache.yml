@@ -1,0 +1,37 @@
+name: 10-cache
+on:
+  workflow_dispatch:
+
+jobs:
+  actions-cache:
+    name: Prime demo cache
+    runs-on: ubuntu-24.04
+    steps:
+      # Mēģinājums atgūt kešu (pirmajā reizē būs neveiksmīgs)
+      - name: Atgriezt kešu
+        id: demo-cache
+        uses: actions/cache@v4.3.0
+        with:
+          path: demo-cache
+          key: demo-cache-v1
+
+      # Izveidot keša direktoriju tikai ja nav atgriezts
+      - name: Izveidot keša direktoriju
+        if: steps.demo-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "Kešs ir tukšs - ģenerējam saturu"
+          mkdir -p demo-cache
+          date > demo-cache/timestamp.txt
+
+      # Saglabāt kešu tika ja tika izveidots jauns saturs
+      - name: Saglabāt kešu
+        if: steps.demo-cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v4.3.0
+        with:
+          path: demo-cache
+          key: demo-cache-v1
+
+      - name: Prbaudīt keša statusu
+        run: |
+          echo "cache-hit? -> ${{ steps.demo-cache.outputs.cache-hit }}"
+          cat demo-cache/timestamp.txt
